@@ -44,35 +44,19 @@ export default function LoadForOne() {
 
       for (const file of files) {
         const match = file.name.match(/^([A-Z]{2,4})_(desktop|mobile)/i);
-        if (match) {
-          const slug = match[1].toUpperCase();
-          const deviceType = match[2].toLowerCase();
+        if(!match) continue
 
-          if (!filesBySlug[slug]) {
-            filesBySlug[slug] = {};
-          }
+        const slug = match[1].toUpperCase();
+        const deviceType = match[2].toLowerCase();
 
-          const reader = new FileReader();
-          const base64 = await new Promise(resolve => {
-            reader.onload = e => resolve(e.target.result);
-            reader.readAsDataURL(file);
-          });
-
-          filesBySlug[slug][deviceType] = {
-            name: file.name,
-            type: file.type,
-            base64: base64,
-          };
-        }
+        if (!filesBySlug[slug]) filesBySlug[slug] = {};
+        filesBySlug[slug][deviceType] = file; // we keep the real File, not the base64, to transfer to the content script and read there, to avoid memory issues in case of big files
       }
 
       const processData = [];
 
       for (const slug of Object.keys(filesBySlug)) {
-        let targetSlugs = [slug]
-        if (slug === 'DEAT') {
-          targetSlugs = ['DE', 'AT'];
-        }
+        let targetSlugs = slug === 'DEAT' ? ['DE', 'AT'] : [slug];
 
         for (const targetSlug of targetSlugs) {
           const shopIds = SLUG_SHOP[targetSlug];
@@ -82,23 +66,16 @@ export default function LoadForOne() {
             continue;
         }
 
-        if (Array.isArray(shopIds)) {
-          shopIds.forEach(shopId => {
-            processData.push({
-              name: `${slug}_${shopId}`,
-              url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
-              language: shopId,
-              files: filesBySlug[slug],
-            });
-          });
-        } else {
+        const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
+
+        shopList.forEach(shopId => {
           processData.push({
-            name: slug,
-            url: window.location.origin === dev ? `${mainURL}${shopIds}` : `${mainURLprod}${shopIds}`,
-            language: shopIds,
-            files: filesBySlug[slug],
+             name: `${slug}_${shopId}`,
+              url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
+            slug: targetSlug,
+            files: filesBySlug[slug], // keeping the real File, not base64
           });
-        }
+        })
       }
     }
 

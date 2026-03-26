@@ -39,22 +39,7 @@ export default defineBackground(() => {
     }
 
     if (message.action === "processTabsSequentially") {
-      processingQueue = message.data.map(item => ({
-        ...item,
-        filesData: item.files ? {
-          desktop: item.files.desktop ? {
-            name: item.files.desktop.name,
-            type: item.files.desktop.type,
-            size: item.files.desktop.size
-          } : null,
-          mobile: item.files.mobile ? {
-            name: item.files.mobile.name,
-            type: item.files.mobile.type,
-            size: item.files.mobile.size
-          } : null
-        } : null
-      }));
-      
+     processingQueue = message.data;
       isProcessing = true;
       processNextInQueue();
       sendResponse({ status: "started" });
@@ -146,20 +131,14 @@ export default defineBackground(() => {
 
           if (filesData.desktop && desktopInputs.length > 0) {
             const dataTransfer = new DataTransfer();
-            const file = new File([filesData.desktop.data], filesData.desktop.name, { 
-              type: filesData.desktop.type 
-            });
-            dataTransfer.items.add(file);
+            dataTransfer.items.add(filesData.desktop);
             desktopInputs[0].files = dataTransfer.files;
             console.log('Desktop banner uploaded');
           }
 
           if (filesData.mobile && mobileInputs.length > 0) {
             const dataTransfer = new DataTransfer();
-            const file = new File([filesData.mobile.data], filesData.mobile.name, { 
-              type: filesData.mobile.type 
-            });
-            dataTransfer.items.add(file);
+            dataTransfer.items.add(filesData.mobile);
             const modernMobileInputs = Array.from(mobileInputs).slice(17);
             if (modernMobileInputs.length > 0) {
               modernMobileInputs[0].files = dataTransfer.files;
