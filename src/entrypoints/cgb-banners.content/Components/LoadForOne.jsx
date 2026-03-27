@@ -44,7 +44,7 @@ export default function LoadForOne() {
 
       for (const file of files) {
         const match = file.name.match(/^([A-Z]{2,4})_(desktop|mobile)/i);
-        if(!match) continue
+        if (!match) continue;
 
         const slug = match[1].toUpperCase();
         const deviceType = match[2].toLowerCase();
@@ -64,38 +64,42 @@ export default function LoadForOne() {
           if (!shopIds) {
             console.warn(`Shop ID not found for: ${targetSlug}`);
             continue;
-        }
+          }
 
-        const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
+          const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
 
-        shopList.forEach(shopId => {
-          processData.push({
-             name: `${slug}_${shopId}`,
+          shopList.forEach(shopId => {
+            processData.push({
+              name: `${slug}_${shopId}`,
               url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
-            slug: targetSlug,
-            files: filesBySlug[slug], // keeping the real File, not base64
+              slug: targetSlug,
+              files: filesBySlug[slug], // keeping the real File, not base64
+            });
           });
-        })
+        }
       }
-    }
 
       if (processData.length === 0) {
         getModal('error', 'No valid files found in ZIP');
         return;
       }
 
-      chrome.runtime.sendMessage(
-        {
-          action: 'processTabsSequentially',
-          data: processData,
-        },
-        response => {
-          if (response?.status === 'started') {
-            console.log(`Started processing ${processData.length} tabs`);
-            getModal('success', `Processing ${processData.length} banners...`);
-          }
-        },
-      );
+      getModal('success', `ZIP loaded successfully! ${processData.length} banners will be processed.`);
+
+      setTimeout(() => {
+        chrome.runtime.sendMessage(
+          {
+            action: 'processTabsSequentially',
+            data: processData,
+          },
+          response => {
+            if (response?.status === 'started') {
+              console.log(`Started processing ${processData.length} tabs`);
+              getModal('success', `Processing ${processData.length} banners...`);
+            }
+          },
+        );
+      }, 1200);
     };
 
     processFiles();
