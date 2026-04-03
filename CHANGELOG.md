@@ -1,4 +1,40 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.1...v1.1.2)
+
+### 🚀 Features
+
+- extraction from zip and uploading on new tabs to the inputs ([38e981f](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/38e981f))
+- update checker with notifications for new versions ([c897143](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/c897143))
+
+### 🐛 Bug Fixes
+
+- some cleaning ([af73d9e](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/af73d9e))
+- small delay between zip uploading and pages opening ([98aba0c](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/98aba0c))
+- large zip upload and tabs opening ([78135fc](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/78135fc))
+
+### ♻️ Code Refactoring
+
+- popup now links to the release page instead of download url ([2adc716](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/2adc716))
+- update host permissions with wildcard patterns, add api.github.com for update checker ([1f705c9](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/1f705c9))
+
+### 🧹 Chores
+
+- release v1.1.2 ([f14a662](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/f14a662))
+- update image proportions from 1:1 to 2:1, bigger font ([63a6256](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/63a6256))
+- ask for additional permissions ([b4e4dc3](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/b4e4dc3))
+- bump deps ([156dd0a](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/156dd0a))
+
+### 📄 Miscellaneous
+
+- Merge branch 'dev' of https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics into dev ([61e6463](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/61e6463))
+- Merge pull request #1 from ShadowDrake21/dima-changes ([7a85ee1](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/7a85ee1)) ([#1](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/issues/1), [#1](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/issues/1))
+
+### Contributors
+
+- Dmytro <122775021+ShadowDrake21@users.noreply.github.com>
+- ShadowDrake21 <dimka670020040@gmail.com>
+- kkazzann <kamil.kazaniecki@beliani.net>
+
 [Compare changes](https://github.com/BelianiRafal/Extension-for-Graphics/compare/v1.1.0...v1.1.1)
 
 ### 🐛 Bug Fixes
