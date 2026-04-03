@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getModal, SLUG_SHOP, mainURL, dev, prod, mainURLprod } from '../assets';
 import JSZip from 'jszip';
-import { clearZipStorage, saveZipToStorage } from '../../../utils/zipStorage';
 
 export default function LoadForOne() {
   const [files, setFiles] = useState([]);
@@ -69,6 +68,7 @@ export default function LoadForOne() {
         },
         async response => {
           if (response?.status === 'success') {
+            URL.revokeObjectURL(blobUrl);
             console.log('ZIP saved to service worker storage');
 
             // Now process the ZIP to get file list

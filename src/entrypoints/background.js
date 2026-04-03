@@ -1,6 +1,4 @@
 import JSZip from 'jszip';
-import { extractFileFromZip, getZipFromStorage } from '../utils/zipStorage';
-import { getModal } from './cgb-banners.content/assets';
 
 const DB_NAME = 'ZipStorage_SW';
 const DB_VERSION = 1;
@@ -29,24 +27,6 @@ function openDatabase() {
         db.createObjectStore(STORE_NAME);
       }
     };
-  });
-}
-
-async function saveZipToServiceWorkerStorage(zipData, zipName) {
-  const db = await openDatabase();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    // Create Blob from array data
-    const blob = new Blob([new Uint8Array(zipData)], { type: 'application/zip' });
-    const zipFile = new File([blob], zipName, { type: 'application/zip' });
-
-    const request = store.put(zipFile, 'currentZip');
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
   });
 }
 
@@ -221,8 +201,6 @@ export default defineBackground(() => {
           .then(() => {
             console.log('Large ZIP saved successfully');
             sendResponse({ status: 'success' });
-            // Revoke the blob URL to free memory
-            URL.revokeObjectURL(message.blobUrl);
           })
           .catch(error => {
             console.error('Error saving large ZIP:', error);
@@ -245,25 +223,6 @@ export default defineBackground(() => {
 
       return true; // indicate async response
     }
-
-    const testZipAccess = async () => {
-      try {
-        const zipBlob = await getZipFromStorage();
-        if (zipBlob) {
-          console.log(`ZIP found in storage, size: ${zipBlob.size} bytes`);
-          const zip = await JSZip.loadAsync(zipBlob);
-          const files = Object.keys(zip.files);
-          console.log(`ZIP contains ${files.length} files:`, files.slice(0, 5));
-          return true;
-        } else {
-          console.log('No ZIP found in storage');
-          return false;
-        }
-      } catch (error) {
-        console.error('Error accessing ZIP from storage:', error);
-        return false;
-      }
-    };
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === 'nextTab') {
@@ -1150,8 +1109,17 @@ export default defineBackground(() => {
   function processNextInQueue() {
     if (currentQueueIndex >= processingQueue.length) {
       console.log('✅ All tabs processed!');
-      getModal('success', `All banners uploaded successfully! Processed ${processingQueue.length} shops.`);
+      const totalProcessed = processingQueue.length;
 
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: "showModal",
+            status: "success",
+            text: `All banners uploaded successfully! Processed ${totalProcessed} shops.`,
+          })
+        }
+      } )
       clearZipFromServiceWorkerStorage()
         .then(() => {
           console.log('🗑️ ZIP cleared from storage');
