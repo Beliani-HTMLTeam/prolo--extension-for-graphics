@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getModal, SLUG_SHOP, mainURL, dev, prod, mainURLprod } from '../assets';
 import JSZip from 'jszip';
 
@@ -6,6 +6,36 @@ export default function LoadForOne() {
   const [files, setFiles] = useState([]);
   const [zipName, setZipName] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // parse filename to extract slug, device type and any additional info
+  const parseFileName = fileName => {
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+
+    // pattern: SLUG_device or SLUG_device_EXTRA
+    const parts = nameWithoutExt.split('_');
+
+    if (parts.length < 2) return null;
+
+    const slug = parts[0].toUpperCase();
+    const deviceType = parts[1].toLowerCase();
+
+    // check if device is valid
+    if (!['desktop', 'mobile'].includes(deviceType)) return null;
+
+    const extra = parts.slice(2);
+
+    return {
+      slug,
+      deviceType,
+      extra,
+      fullName: nameWithoutExt,
+      originalName: fileName,
+
+      // for cashback
+      hasLanguageVariant: extra.length > 0,
+      languageCode: extra.length > 0 ? extra.join('-') : null,
+    };
+  };
 
   const handleZipUpload = async e => {
     try {
@@ -15,114 +45,155 @@ export default function LoadForOne() {
       setZipName(zipfile.name);
       setLoading(true);
 
-      const zip = await JSZip.loadAsync(zipfile);
-      const fileInside = Object.values(zip.files).filter(item => !item.dir);
-      const extractedFiles = await Promise.all(
-        fileInside.map(async file => {
-          const blob = await file.async('blob');
-          return new File([blob], file.name, { type: blob.type || 'application/octet-stream' });
-        }),
-      );
+      const readableStream = zipfile.stream();
+      const reader = readableStream.getReader();
 
-      setFiles(extractedFiles);
-      setLoading(false);
-      getModal('success', `Loaded ${extractedFiles.length} files from ZIP`);
+      const chunks = [];
+
+      while (true) {
+        const {done, value} = await reader.read()
+        if (done) break;
+        chunks.push(value);
+      }
+
+      const blob = new Blob(chunks, {type: 'application/zip'});
+      const blobUrl = URL.createObjectURL(blob);
+
+      chrome.runtime.sendMessage(
+        {
+          action: 'saveZipToStorage',
+          blobUrl: blobUrl,
+          zipName: zipfile.name,
+          zipSize: zipfile.size,
+        },
+        async response => {
+          if (response?.status === 'success') {
+            URL.revokeObjectURL(blobUrl);
+            console.log('ZIP saved to service worker storage');
+
+            // Now process the ZIP to get file list
+            const zip = await JSZip.loadAsync(zipfile);
+            const fileInside = Object.values(zip.files).filter(item => !item.dir);
+            const fileNames = fileInside.map(file => file.name);
+            const filesBySlug = {};
+
+            // Parse each filename and organize by slug
+            for (const fileName of fileNames) {
+              const parsed = parseFileName(fileName);
+              if (!parsed) continue;
+
+              const { slug, deviceType, extra, fullName, originalName, hasLanguageVariant, languageCode } = parsed;
+
+              if (!filesBySlug[slug]) {
+                filesBySlug[slug] = {
+                  desktop: [],
+                  mobile: [],
+                  allFiles: [],
+                  isCashback: false,
+                  variants: new Set(),
+                };
+              }
+
+              const fileInfo = {
+                fullName,
+                extra,
+                originalName,
+                hasLanguageVariant,
+                languageCode,
+                variantParts: extra,
+              };
+
+              filesBySlug[slug][deviceType].push(fileInfo);
+              filesBySlug[slug].allFiles.push(fileInfo);
+
+              if (hasLanguageVariant && extra.length > 0) {
+                filesBySlug[slug].variants.add(extra.join('-'));
+                filesBySlug[slug].isCashback = true;
+              }
+            }
+
+            for (const [slug, data] of Object.entries(filesBySlug)) {
+              console.log(`Slug ${slug}:`, {
+                isCashback: data.isCashback,
+                desktopCount: data.desktop.length,
+                mobileCount: data.mobile.length,
+                variants: Array.from(data.variants),
+              });
+            }
+
+            const processData = [];
+
+            for (const slug of Object.keys(filesBySlug)) {
+              let targetSlugs = slug === 'DEAT' ? ['DE', 'AT'] : [slug];
+
+              for (const targetSlug of targetSlugs) {
+                const shopIds = SLUG_SHOP[targetSlug];
+
+                if (!shopIds) {
+                  console.warn(`Shop ID not found for: ${targetSlug}`);
+                  continue;
+                }
+
+                const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
+
+                shopList.forEach(shopId => {
+                  processData.push({
+                    name: `${targetSlug}_${shopId}`,
+                    url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
+                    slug: targetSlug,
+                    filesInfo: filesBySlug[slug],
+                  });
+                });
+              }
+            }
+
+            console.log(
+              'ProcessData built:',
+              processData.map(item => ({
+                name: item.name,
+                slug: item.slug,
+                url: item.url,
+              })),
+            );
+
+            if (processData.length === 0) {
+              getModal('error', 'No valid files found in ZIP');
+              setLoading(false);
+              return;
+            }
+
+            getModal('success', `ZIP loaded successfully! ${processData.length} banners will be processed.`);
+
+            setTimeout(() => {
+              chrome.runtime.sendMessage(
+                {
+                  action: 'processTabsSequentially',
+                  data: processData,
+                  zipName: zipfile.name,
+                },
+                response => {
+                  if (response?.status === 'started') {
+                    console.log(`Started processing ${processData.length} tabs`);
+                    getModal('success', `Processing ${processData.length} banners...`);
+                  }
+                },
+              );
+            }, 1200);
+
+            setLoading(false);
+          } else {
+            throw new Error(response?.error || 'Failed to save ZIP');
+          }
+        },
+      );
     } catch (e) {
+      console.error('Error loading ZIP: ', e);
       getModal('error', 'Please upload ZIP file!');
       setZipName('');
       setFiles([]);
       setLoading(false);
-      return;
     }
   };
-
-  useEffect(() => {
-    if (files.length === 0) return;
-
-    const processFiles = async () => {
-      const filesBySlug = {};
-
-      for (const file of files) {
-        const match = file.name.match(/^([A-Z]{2,4})_(desktop|mobile)/i);
-        if (match) {
-          const slug = match[1].toUpperCase();
-          const deviceType = match[2].toLowerCase();
-
-          if (!filesBySlug[slug]) {
-            filesBySlug[slug] = {};
-          }
-
-          const reader = new FileReader();
-          const base64 = await new Promise(resolve => {
-            reader.onload = e => resolve(e.target.result);
-            reader.readAsDataURL(file);
-          });
-
-          filesBySlug[slug][deviceType] = {
-            name: file.name,
-            type: file.type,
-            base64: base64,
-          };
-        }
-      }
-
-      const processData = [];
-
-      for (const slug of Object.keys(filesBySlug)) {
-        let targetSlugs = [slug]
-        if (slug === 'DEAT') {
-          targetSlugs = ['DE', 'AT'];
-        }
-
-        for (const targetSlug of targetSlugs) {
-          const shopIds = SLUG_SHOP[targetSlug];
-
-          if (!shopIds) {
-            console.warn(`Shop ID not found for: ${targetSlug}`);
-            continue;
-        }
-
-        if (Array.isArray(shopIds)) {
-          shopIds.forEach(shopId => {
-            processData.push({
-              name: `${slug}_${shopId}`,
-              url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
-              language: shopId,
-              files: filesBySlug[slug],
-            });
-          });
-        } else {
-          processData.push({
-            name: slug,
-            url: window.location.origin === dev ? `${mainURL}${shopIds}` : `${mainURLprod}${shopIds}`,
-            language: shopIds,
-            files: filesBySlug[slug],
-          });
-        }
-      }
-    }
-
-      if (processData.length === 0) {
-        getModal('error', 'No valid files found in ZIP');
-        return;
-      }
-
-      chrome.runtime.sendMessage(
-        {
-          action: 'processTabsSequentially',
-          data: processData,
-        },
-        response => {
-          if (response?.status === 'started') {
-            console.log(`Started processing ${processData.length} tabs`);
-            getModal('success', `Processing ${processData.length} banners...`);
-          }
-        },
-      );
-    };
-
-    processFiles();
-  }, [files]);
 
   return (
     <div className="load-for-one">
