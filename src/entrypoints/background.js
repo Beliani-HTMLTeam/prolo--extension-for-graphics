@@ -1,3 +1,5 @@
+import { initUpdateChecker, checkForUpdate } from './updater.content/checker';
+
 import JSZip from 'jszip';
 
 const DB_NAME = 'ZipStorage_SW';
@@ -106,6 +108,8 @@ async function extractFileFromServiceWorkerZip(fileName) {
 }
 
 export default defineBackground(() => {
+  initUpdateChecker();
+
   let processingQueue = [];
   let currentTabId = null;
   let isProcessing = false;
@@ -187,6 +191,29 @@ export default defineBackground(() => {
   };
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.action === 'efg:checkForUpdate') {
+      void checkForUpdate().finally(() => {
+        try { sendResponse({ ok: true }); } catch { /* */ }
+      });
+      return true;
+    }
+
+    if (message.action === "nextTab") {
+      chrome.tabs.query({ currentWindow: true }, async (tabs) => {
+        const activeTabs = await chrome.tabs.query({ 
+          active: true, 
+          currentWindow: true 
+        });
+        
+        if (activeTabs.length > 0) {
+          const currentIndex = activeTabs[0].index;
+          const nextIndex = (currentIndex + 1) % tabs.length;
+          await chrome.tabs.update(tabs[nextIndex].id, { active: true });
+        }
+      });
+      
+      return true;
+    }
     if (message.action === 'saveZipToStorage') {
       console.log('Saving ZIP to service worker storage...');
 
