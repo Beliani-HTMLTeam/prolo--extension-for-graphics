@@ -37,7 +37,11 @@ export const COUNTRY_CODE = {
   UK: 'english',
   PL: 'polish',
   DACH: ['german', 'germanDE'],
-  CH: '',
+  CH: 'german',
+  CHDE: 'german',
+  DE: 'germanDE',
+  AT: 'germanDE',
+  DEAT: 'germanDE',
   NL: 'dutch',
   FR: 'french',
   ES: 'spanish',
@@ -241,9 +245,16 @@ export const checkedDeviceType = (item, device, btnArray) => {
     console.log('checkedDeviceType', item.name, device, btnArray);
     const splitedName = item.name.split(`_${device}`)[0];
     const language = COUNTRY_CODE[splitedName];
+    
+    if (!language) {
+      console.warn(`No language mapping in COUNTRY_CODE for slug: ${splitedName}`);
+      return;
+    }
+    
     const languages = Array.isArray(language) ? language : [language];
 
     languages.forEach(lang => {
+      if (!lang) return;
       const button = btnArray.find(btn => {
         const btnLanguage = btn.name.split('[')[1].split(']')[0];
         return btnLanguage.toLowerCase() === lang.toLowerCase();

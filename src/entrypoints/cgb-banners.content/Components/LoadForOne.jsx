@@ -123,58 +123,81 @@ export default function LoadForOne() {
 
             const processData = [];
 
+            const addShop = (targetSlug, sourceSlug) => {
+            const shopIds = SLUG_SHOP[targetSlug];
+            if (!shopIds) return;
+
+            const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
+
+            shopList.forEach(shopId => {
+              processData.push({
+                name: `${sourceSlug}_${shopId}`,
+                url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
+                slug: targetSlug,
+                filesInfo: filesBySlug[sourceSlug],
+              });
+            });
+          };
+         
+          // Apply priority rules
+          if (filesBySlug['DEAT']) {
+            addShop('DE', 'DEAT');
+            addShop('AT', 'DEAT');
+          }
+          if (filesBySlug['CHDE']) {
+            addShop('CH', 'CHDE');
+          } else if (filesBySlug['CH']) {
+            addShop('CH', 'CH');
+          }
+
+          // DACH as fallback (only if no more specific version exists)
+          if (filesBySlug['DACH']) {
+            if (!filesBySlug['DEAT']) {
+              addShop('DE', 'DACH');
+              addShop('AT', 'DACH');
+            } 
+            if(!filesBySlug['CHDE'] && !filesBySlug['CH']) {
+              addShop('CH', 'DACH');
+            }
+          }
+
             for (const slug of Object.keys(filesBySlug)) {
-              let targetSlugs = slug === 'DEAT' ? ['DE', 'AT'] : [slug];
+              if (['DEAT', 'CHDE', 'CH', 'DACH'].includes(slug)) continue; 
 
-              for (const targetSlug of targetSlugs) {
-                const shopIds = SLUG_SHOP[targetSlug];
-
-                if (!shopIds) {
-                  console.warn(`Shop ID not found for: ${targetSlug}`);
-                  continue;
-                }
-
-                const shopList = Array.isArray(shopIds) ? shopIds : [shopIds];
-
-                shopList.forEach(shopId => {
-                  processData.push({
-                    name: `${targetSlug}_${shopId}`,
-                    url: window.location.origin === dev ? `${mainURL}${shopId}` : `${mainURLprod}${shopId}`,
-                    slug: targetSlug,
-                    filesInfo: filesBySlug[slug],
-                  });
-                });
-              }
+              addShop(slug, slug);
             }
 
+            const uniqueProcessData = processData.filter((item, index, self) => 
+            index === self.findIndex(i => i.url === item.url))
+
             console.log(
-              'ProcessData built:',
-              processData.map(item => ({
+              'uniqueProcessData built:',
+              uniqueProcessData.map(item => ({
                 name: item.name,
                 slug: item.slug,
                 url: item.url,
               })),
             );
 
-            if (processData.length === 0) {
+            if (uniqueProcessData.length === 0) {
               getModal('error', 'No valid files found in ZIP');
               setLoading(false);
               return;
             }
 
-            getModal('success', `ZIP loaded successfully! ${processData.length} banners will be processed.`);
+            getModal('success', `ZIP loaded successfully! ${uniqueProcessData.length} banners will be processed.`);
 
             setTimeout(() => {
               chrome.runtime.sendMessage(
                 {
                   action: 'processTabsSequentially',
-                  data: processData,
+                  data: uniqueProcessData,
                   zipName: zipfile.name,
                 },
                 response => {
                   if (response?.status === 'started') {
-                    console.log(`Started processing ${processData.length} tabs`);
-                    getModal('success', `Processing ${processData.length} banners...`);
+                    console.log(`Started processing ${uniqueProcessData.length} tabs`);
+                    getModal('success', `Processing ${uniqueProcessData.length} banners...`);
                   }
                 },
               );

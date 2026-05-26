@@ -60,53 +60,84 @@ export default function LoadZipButton() {
   };
 
 useEffect(() => {
-  if (files.length === 0) return;
-  setLoading(true);
+    if (files.length === 0) return;
 
-  const sortedForDesktopOrMobile = () => {
-    try {
-      const currentShop = getCurrentShop();
-      
-      const isCashback = files.some(file => {
-          const fileKey = file.name
-              .replace(/\.[^/.]+$/, '')
-              .trim()
-              .toUpperCase();
+    setLoading(true);
 
-          const parts = fileKey.split('_');
-          const slugParts = parts.filter(p => isNaN(p) && p !== 'DESKTOP' && p !== 'MOBILE');
-          
-          return slugParts.length > 1
-        })
+    const processFiles = () => {
+      try {
+        const currentShop = getCurrentShop();
 
-      for (const item of files) {
-        if (isCashback) {
-          filledCashback(item, desktopFiles, currentShop);
-          filledCashback(item, cashbackMobile, currentShop);
-        } else {
-          checkedDeviceType(item, 'desktop', desktopFiles);
-          checkedDeviceType(item, 'mobile', mobileFiles);
+        const hasCashback = files.some(file => file.name.split('_').length > 2);
+        const hasDEAT = files.some(f => f.name.toUpperCase().startsWith('DEAT_'));
+        const hasCHDE = files.some(f => f.name.toUpperCase().startsWith('CHDE_'));
+        const hasDACH = files.some(f => f.name.toUpperCase().startsWith('DACH_'));
+
+        console.log(`[Priority] Current Shop: ${currentShop} | DEAT:${hasDEAT}, CHDE:${hasCHDE}, DACH:${hasDACH}`);
+
+        for (const item of files) {
+          const upperName = item.name.toUpperCase();
+
+          if (hasCashback) {
+            filledCashback(item, desktopFiles, currentShop);
+            filledCashback(item, cashbackMobile, currentShop);
+            continue;
+          }
+
+          // ==================== PRIORITY LOGIC ====================
+          let assigned = false;
+
+          // 1. Highest priority: DEAT for DE/AT
+          if (upperName.startsWith('DEAT_') && ['DE', 'AT'].includes(currentShop)) {
+            console.log(`→ Assigning DEAT file to ${currentShop}`);
+            checkedDeviceType(item, 'desktop', desktopFiles);
+            checkedDeviceType(item, 'mobile', mobileFiles);
+            assigned = true;
+          }
+
+          // 2. Highest priority: CHDE for CH
+          else if ((upperName.startsWith('CHDE_') || upperName.startsWith('CH_')) && currentShop === 'CH') {
+            console.log(`→ Assigning CHDE/CH file to CH`);
+            checkedDeviceType(item, 'desktop', desktopFiles);
+            checkedDeviceType(item, 'mobile', mobileFiles);
+            assigned = true;
+          }
+
+          // 3. DACH as fallback
+          else if (upperName.startsWith('DACH_')) {
+            const shouldUseDACH = 
+              (currentShop === 'CH' && !hasCHDE) ||
+              (currentShop === 'DE' && !hasDEAT) ||
+              (currentShop === 'AT' && !hasDEAT);
+
+            if (shouldUseDACH) {
+              console.log(`→ Using DACH as fallback for ${currentShop}`);
+              checkedDeviceType(item, 'desktop', desktopFiles);
+              checkedDeviceType(item, 'mobile', mobileFiles);
+              assigned = true;
+            }
+          }
+
+          // 4. Normal shops
+          else if (!assigned) {
+            console.log(`→ Normal assignment for ${upperName}`);
+            checkedDeviceType(item, 'desktop', desktopFiles);
+            checkedDeviceType(item, 'mobile', mobileFiles);
+          }
         }
+
+        getModal('nyan', `Files added! ${hasCashback ? 'Cashback' : 'Regular'}`);
+      } catch (e) {
+        console.error(e);
+        getModal('cryMen', 'Error assigning files');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // getModal('nyan', 'Files added to inputs!');
-
-       getModal('nyan', 'Files added to inputs! ' + (isCashback ? 'Cashback!' : 'Regular campaign!'));
-    } catch (e) {
-      console.log(e);
-      getModal('cryMen', 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const timer = setTimeout(() => {
-    sortedForDesktopOrMobile();
-  }, 2000);
-
-  return () => clearTimeout(timer);
-}, [files]);
-
+    const timer = setTimeout(processFiles, 1000);
+    return () => clearTimeout(timer);
+  }, [files, desktopFiles, mobileFiles, cashbackMobile]);
 
   return (
     <div className="zip__wrapper">
