@@ -1,4 +1,25 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.2...v1.1.3)
+
+### 🚀 Features
+
+- case insensitive device type ([8f7ee8b](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/8f7ee8b))
+- DACH naming variations ([4cd3d24](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/4cd3d24))
+
+### 🧹 Chores
+
+- release v1.1.3 ([565d385](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/565d385))
+
+### 📄 Miscellaneous
+
+- Merge remote-tracking branch 'origin/main' ([b3f1238](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/b3f1238))
+- Merge pull request #2 from Beliani-HTMLTeam/dev ([87335a3](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/87335a3)) ([#2](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/issues/2), [#2](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/issues/2))
+
+### Contributors
+
+- Dmytro <122775021+ShadowDrake21@users.noreply.github.com>
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.1...v1.1.2)
 
 ### 🚀 Features
