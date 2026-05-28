@@ -134,7 +134,7 @@ export const SLUG_SHOP = {
   RO: '?shop_id=30',
   HR: '?shop_id=33',
   SI: '?shop_id=34',
-  BE: '?shop_id=19', 
+  BE: '?shop_id=19',
 };
 
 export function convertToObject(CSV) {
@@ -241,32 +241,38 @@ export const getCurrentShop = () => {
 };
 
 export const checkedDeviceType = (item, device, btnArray) => {
-  if (item.name.includes(device)) {
-    console.log('checkedDeviceType', item.name, device, btnArray);
-    const splitedName = item.name.split(`_${device}`)[0];
-    const language = COUNTRY_CODE[splitedName];
-    
-    if (!language) {
-      console.warn(`No language mapping in COUNTRY_CODE for slug: ${splitedName}`);
-      return;
-    }
-    
-    const languages = Array.isArray(language) ? language : [language];
+  if (!item?.name || !device) return;
+  const fileNameUpper = item.name.toUpperCase();
+  const deviceUpper = device.toUpperCase();
 
-    languages.forEach(lang => {
-      if (!lang) return;
-      const button = btnArray.find(btn => {
-        const btnLanguage = btn.name.split('[')[1].split(']')[0];
-        return btnLanguage.toLowerCase() === lang.toLowerCase();
-      });
+  if (!fileNameUpper.includes(`_${deviceUpper}`)) return;
 
-      if (button) {
-        const transferData = new DataTransfer();
-        transferData.items.add(item);
-        button.files = transferData.files;
-      }
-    });
+  console.log('checkedDeviceType', item.name, device, btnArray);
+
+  const splitedName = item.name.split(new RegExp(`_${device}`, 'i'))[0];
+  const language = COUNTRY_CODE[splitedName.toUpperCase()];
+
+  if (!language) {
+    console.warn(`No language mapping in COUNTRY_CODE for slug: ${splitedName}`);
+    return;
   }
+
+  const languages = Array.isArray(language) ? language : [language];
+
+  languages.forEach(lang => {
+    if (!lang) return;
+    const button = btnArray.find(btn => {
+      const btnLanguage = btn.name.split('[')[1].split(']')[0];
+      return btnLanguage.toLowerCase() === lang.toLowerCase();
+    });
+
+    if (button) {
+      const transferData = new DataTransfer();
+      transferData.items.add(item);
+      button.files = transferData.files;
+      console.log(`✅ Assigned ${item.name} → ${button.name}`);
+    }
+  });
 };
 
 export const filledCashback = (item, btnArray, currentShop) => {
@@ -287,7 +293,7 @@ export const filledCashback = (item, btnArray, currentShop) => {
   const fileSlug = slugParts[0];
   const deviceType = fileKeyParts.find(part => part === 'DESKTOP' || part === 'MOBILE');
   const updatedFileKey = slugParts.join('-');
-  
+
   let targetShops = [fileSlug];
 
   if (fileSlug === 'DEAT') {
