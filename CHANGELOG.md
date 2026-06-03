@@ -1,4 +1,18 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.3...v1.1.4)
+
+### 🐛 Bug Fixes
+
+- changing main cgb height to auto ([b31950d](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/b31950d))
+
+### 🧹 Chores
+
+- release v1.1.4 ([9321050](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/9321050))
+
+### Contributors
+
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.2...v1.1.3)
 
 ### 🚀 Features
