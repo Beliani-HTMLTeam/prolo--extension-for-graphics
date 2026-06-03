@@ -1,8 +1,8 @@
 @use './variables' as *;
 
 .main-cgb {
-  height: 100%;
   position: fixed;
+  height: auto;
   top: 20px;
   right: 20px;
 }
