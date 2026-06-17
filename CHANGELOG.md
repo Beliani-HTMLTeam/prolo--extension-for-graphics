@@ -1,4 +1,18 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.4...v1.1.5)
+
+### 🐛 Bug Fixes
+
+- language and slug parts case insensivity ([cd7e6a6](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/cd7e6a6))
+
+### 🧹 Chores
+
+- release v1.1.5 ([d213736](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/d213736))
+
+### Contributors
+
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.3...v1.1.4)
 
 ### 🐛 Bug Fixes
