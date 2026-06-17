@@ -118,10 +118,10 @@ export default defineBackground(() => {
   let pendingUploadData = null;
 
   const parseFileName = fileName => {
-    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '').trim()
 
     // pattern: SLUG_device or SLUG_device_EXTRA
-    const parts = nameWithoutExt.split('_');
+    const parts = nameWithoutExt.split('_').filter(Boolean); // remove empty parts
 
     if (parts.length < 2) return null;
 
@@ -131,7 +131,7 @@ export default defineBackground(() => {
     // check if device is valid
     if (!['desktop', 'mobile'].includes(deviceType)) return null;
 
-    const extra = parts.slice(2);
+    const extra = parts.slice(2).map(part => part.toUpperCase());
 
     return {
       slug,
@@ -791,7 +791,7 @@ export default defineBackground(() => {
 
         // Helper function to get the language from filename using COUNTRY_CASHBACK
         const getLanguageFromFilename = fileName => {
-          const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '').trim();
+          const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '').trim().trim().toUpperCase();
           const parts = nameWithoutExt.split('_');
 
           // Get the slug and extra parts

@@ -12,7 +12,7 @@ export default function LoadForOne() {
     const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
 
     // pattern: SLUG_device or SLUG_device_EXTRA
-    const parts = nameWithoutExt.split('_');
+    const parts = nameWithoutExt.split('_').filter(Boolean); // remove empty parts
 
     if (parts.length < 2) return null;
 
@@ -22,7 +22,7 @@ export default function LoadForOne() {
     // check if device is valid
     if (!['desktop', 'mobile'].includes(deviceType)) return null;
 
-    const extra = parts.slice(2);
+    const extra = parts.slice(2).map(part => part.toUpperCase());
 
     return {
       slug,
