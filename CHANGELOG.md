@@ -1,4 +1,18 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.5...v1.1.6)
+
+### 🚀 Features
+
+- inactive deactivation date in category page ([072ae69](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/072ae69))
+
+### 🧹 Chores
+
+- release v1.1.6 ([8ebb45f](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/8ebb45f))
+
+### Contributors
+
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.4...v1.1.5)
 
 ### 🐛 Bug Fixes
