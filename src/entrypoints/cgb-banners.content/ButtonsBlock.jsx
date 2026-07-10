@@ -32,172 +32,213 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
   };
 
   // ────────────────────────────────────────────────
-// 1. Initialization – run once (or until DOM ready)
-// ────────────────────────────────────────────────
-useEffect(() => {
-  let isActive = true;
+  // 1. Initialization – run once (or until DOM ready)
+  // ────────────────────────────────────────────────
+  useEffect(() => {
+    let isActive = true;
 
-  const tryInit = () => {
-    if (!isActive) return false;
+    const tryInit = () => {
+      if (!isActive) return false;
 
-    const actDate   = document.querySelector('input[name="activate_from_date"]#activate_from_date');
-    const actTime   = document.querySelector('input[name="activate_from_time"]#activate_from_time');
+      const actDate = document.querySelector('input[name="activate_from_date"]#activate_from_date');
+      const actTime = document.querySelector('input[name="activate_from_time"]#activate_from_time');
+      const deactDate = document.querySelector('input[name="deactivate_from_date"]#deactivate_from_date');
+      const deactTime = document.querySelector('input[name="deactivate_from_time"]#deactivate_from_time');
+      const cntDate = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
+      const cntTime = document.querySelector('input[name="countdown_till_time"]#countdown_till_time');
+
+      const select = document.querySelector('select[name="block"]#select-block');
+
+      if (!actDate || !actTime || !deactDate || !deactTime || !cntDate || !cntTime || !select) {
+        return false; // not ready → retry
+      }
+
+      const currentActivate = actDate.value?.trim() || '';
+      const currentDeactivate = deactDate.value?.trim() || '';
+
+      setActivateDate(currentActivate);
+      setDeactivateDate(currentDeactivate);
+
+      // Set placeholders if value exists
+      if (actDate.value) actDate.placeholder = actDate.value;
+      if (deactDate.value) deactDate.placeholder = deactDate.value;
+      if (cntDate.value) cntDate.placeholder = cntDate.value;
+
+      // Apply default times only when empty
+      const applyIfEmpty = (el, value) => {
+        if (el && !el.value?.trim()) {
+          el.value = value;
+          el.placeholder = value;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      };
+
+      applyIfEmpty(actTime, '01:00:00');
+      applyIfEmpty(deactTime, '23:59:00');
+
+      let activationDateStr = currentActivate;
+      if (!currentActivate) {
+        const today = new Date();
+        activationDateStr = today.toISOString().split('T')[0];
+
+        actDate.value = activationDateStr;
+        actDate.dispatchEvent(new Event('input', { bubbles: true }));
+        actDate.dispatchEvent(new Event('change', { bubbles: true }));
+        setActivateDate(activationDateStr);
+      }
+
+      if (!currentDeactivate) {
+        const deactDateStr = activationDateStr; // ← Same date as activation
+
+        deactDate.value = deactDateStr;
+        deactDate.dispatchEvent(new Event('input', { bubbles: true }));
+        deactDate.dispatchEvent(new Event('change', { bubbles: true }));
+        setDeactivateDate(deactDateStr);
+      }
+
+      // Countdown time (always set if discount_top)
+      const isDiscountTop = select.options[select.selectedIndex].text?.trim() === 'discount_top';
+      if (isDiscountTop) {
+        applyIfEmpty(cntTime, '23:59:00');
+      }
+
+      setOfferInput(Array.from(document.querySelectorAll('input[name^="offer_text"]')));
+      setBannerType(select.value?.trim() || 'center');
+
+      return true;
+    };
+
+    if (tryInit()) return;
+
+    const id = setInterval(() => {
+      if (tryInit()) clearInterval(id);
+    }, 300);
+
+    return () => {
+      isActive = false;
+      clearInterval(id);
+    };
+  }, []); // runs once
+
+  useEffect(() => {
+    const actDate = document.querySelector('input[name="activate_from_date"]#activate_from_date');
     const deactDate = document.querySelector('input[name="deactivate_from_date"]#deactivate_from_date');
     const deactTime = document.querySelector('input[name="deactivate_from_time"]#deactivate_from_time');
-    const cntDate   = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
-    const cntTime   = document.querySelector('input[name="countdown_till_time"]#countdown_till_time');
 
-    const select    = document.querySelector('select[name="block"]#select-block');
+    if (!deactDate) return;
 
-    if (!actDate || !actTime || !deactDate || !deactTime || !cntDate || !cntTime || !select) {
-      return false; // not ready → retry
+    if (bannerType === 'category_page') {
+      // For category_page → NEVER use deactivation date
+      [deactDate, deactTime].forEach(el => {
+        if (el) {
+          el.value = '';
+          el.placeholder = '';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      setDeactivateDate('');
+    } else {
+      let activationDateStr = actDate?.value?.trim() || '';
+
+      // If activation is empty, use today
+      if (!activationDateStr) {
+        const today = new Date();
+        activationDateStr = today.toISOString().split('T')[0];
+      }
+
+      const deactDateStr = activationDateStr; // ← Same date as activation
+
+      if (!deactDate.value?.trim()) {
+        deactDate.value = deactDateStr;
+        deactDate.dispatchEvent(new Event('input', { bubbles: true }));
+        deactDate.dispatchEvent(new Event('change', { bubbles: true }));
+        setDeactivateDate(deactDateStr);
+      }
+
+      if (deactTime && !deactTime.value?.trim()) {
+        deactTime.value = '23:59:00';
+      }
     }
+  }, [bannerType]);
 
-    // Set placeholders if value exists
-    if (actDate.value)   actDate.placeholder   = actDate.value;
-    if (deactDate.value) deactDate.placeholder = deactDate.value;
-    if (cntDate.value)   cntDate.placeholder   = cntDate.value;
+  useEffect(() => {
+    const actDate = document.querySelector('input[name="activate_from_date"]#activate_from_date');
+    if (actDate && actDate.value !== activateDate) {
+      actDate.value = activateDate;
+      actDate.dispatchEvent(new Event('input', { bubbles: true }));
+      actDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }, [activateDate]);
 
-    // Apply default times only when empty
-    const applyIfEmpty = (el, value) => {
-      if (el && !el.value?.trim()) {
-        el.value = value;
-        el.dispatchEvent(new Event('input',  { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+  useEffect(() => {
+    const deactDate = document.querySelector('input[name="deactivate_from_date"]#deactivate_from_date');
+    if (deactDate && deactDate.value !== deactivateDate) {
+      deactDate.value = deactivateDate;
+      deactDate.dispatchEvent(new Event('input', { bubbles: true }));
+      deactDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }, [deactivateDate]);
+
+  useEffect(() => {
+    const cntDate = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
+    if (cntDate && cntDate.value !== countDate) {
+      cntDate.value = countDate;
+      cntDate.dispatchEvent(new Event('input', { bubbles: true }));
+      cntDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }, [countDate]);
+
+  useEffect(() => {
+    const select = document.querySelector('select[name="block"]#select-block');
+
+    const handleChange = () => {
+      const newValue = select.value;
+      const newText = select.options[select.selectedIndex].text;
+
+      console.log('Banner type changed →', { value: newValue, label: newText });
+
+      setBannerType(newText.toLowerCase());
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const cntTime = document.querySelector('input[name="countdown_till_time"]#countdown_till_time');
+      const cntDate = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
+
+      console.log('cntTime and cntDate', cntDate.placeholder, cntTime.value);
+
+      if (newText === 'discount_top') {
+        if (!cntDate.placeholder?.trim()) {
+          cntDate.value = today;
+          cntDate.dispatchEvent(new Event('input', { bubbles: true }));
+          cntDate.dispatchEvent(new Event('change', { bubbles: true }));
+          setCountDate(today);
+        }
+        if (!cntTime.value?.trim()) {
+          cntTime.value = '23:59:00'; // ← choose consistent value
+          cntTime.dispatchEvent(new Event('input', { bubbles: true }));
+          cntTime.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      } else {
+        cntDate.value = '';
+        cntDate.placeholder = '';
+        cntDate.dispatchEvent(new Event('input', { bubbles: true }));
+        cntDate.dispatchEvent(new Event('change', { bubbles: true }));
+        setCountDate('');
+        cntTime.value = '';
+        cntTime.dispatchEvent(new Event('input', { bubbles: true }));
+        cntTime.dispatchEvent(new Event('change', { bubbles: true }));
       }
     };
 
-    applyIfEmpty(actTime,   '01:00:00');
-    applyIfEmpty(deactTime, '00:59:00');
+    handleChange();
+    select.addEventListener('change', handleChange);
 
-    console.log('options[select.selectedIndex].text:', select.options[select.selectedIndex].text);
-    
-
-    const isDiscountTop = select.options[select.selectedIndex].text?.trim() === 'discount_top';
-
-    if (isDiscountTop) {
-      const today = new Date().toISOString().split('T')[0];
-
-      if (!cntDate.value?.trim()) {
-        cntDate.value = today;
-        cntDate.dispatchEvent(new Event('input',  { bubbles: true }));
-        cntDate.dispatchEvent(new Event('change', { bubbles: true }));
-        setCountDate(today);
-      }
-      applyIfEmpty(cntTime,   '23:59:00');
-    }
-
-    // Optional: default dates to today when empty
-    const today = new Date().toISOString().split('T')[0];
-    applyIfEmpty(actDate,   today);
-    applyIfEmpty(deactDate, today);
-    // usually do NOT force countdown date
-
-    // Read current values into React state (once)
-    setActivateDate(actDate.value || '');
-    setDeactivateDate(deactDate.value || '');
-    setCountDate(cntDate.value || '');
-
-    // Collect offer inputs
-    setOfferInput(Array.from(document.querySelectorAll('input[name^="offer_text"]')));
-
-    setBannerType(select.value?.trim() || 'center');
-    return true;
-  };
-
-  // Try right now
-  if (tryInit()) return;
-
-  // Retry if inputs not yet in DOM (popup loading delay)
-  const id = setInterval(() => {
-    if (tryInit()) clearInterval(id);
-  }, 300);
-
-  return () => {
-    isActive = false;
-    clearInterval(id);
-  };
-}, []); // runs once
-
-  useEffect(() => {
-  const actDate = document.querySelector('input[name="activate_from_date"]#activate_from_date');
-  if (actDate && actDate.value !== activateDate) {
-    actDate.value = activateDate;
-    actDate.dispatchEvent(new Event('input',  { bubbles: true }));
-    actDate.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-}, [activateDate]);
-
-useEffect(() => {
-  const deactDate = document.querySelector('input[name="deactivate_from_date"]#deactivate_from_date');
-  if (deactDate && deactDate.value !== deactivateDate) {
-    deactDate.value = deactivateDate;
-    deactDate.dispatchEvent(new Event('input',  { bubbles: true }));
-    deactDate.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-}, [deactivateDate]);
-
-useEffect(() => {
-  const cntDate = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
-  if (cntDate && cntDate.value !== countDate) {
-    cntDate.value = countDate;
-    cntDate.dispatchEvent(new Event('input',  { bubbles: true }));
-    cntDate.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-}, [countDate]);
-
-useEffect(() => {
-  const select = document.querySelector('select[name="block"]#select-block')
-
- const handleChange = () => {
-  const newValue = select.value
-  const newText = select.options[select.selectedIndex].text;
-
-  console.log('Banner type changed →', { value: newValue, label: newText });
-
-  setBannerType(newText.toLowerCase());
-
-  const today = new Date().toISOString().split('T')[0];
-
-  const cntTime = document.querySelector('input[name="countdown_till_time"]#countdown_till_time');
-  const cntDate = document.querySelector('input[name="countdown_till_date"]#countdown_till_date');
-
-  console.log('cntTime and cntDate', cntDate.placeholder, cntTime.value);
-  
-
-  if (newText === 'discount_top') {
-      if (!cntDate.placeholder?.trim()) {
-        cntDate.value = today;
-        cntDate.dispatchEvent(new Event('input',  { bubbles: true }));
-        cntDate.dispatchEvent(new Event('change', { bubbles: true }));
-        setCountDate(today);
-      }
-      if (!cntTime.value?.trim()) {
-        cntTime.value = '23:59:00';           // ← choose consistent value
-        cntTime.dispatchEvent(new Event('input',  { bubbles: true }));
-        cntTime.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    }
-    else {
-      cntDate.value = '';
-      cntDate.placeholder = '';
-      cntDate.dispatchEvent(new Event('input',  { bubbles: true }));
-      cntDate.dispatchEvent(new Event('change', { bubbles: true }));
-      setCountDate('');
-      cntTime.value = '';
-      cntTime.dispatchEvent(new Event('input',  { bubbles: true }));
-      cntTime.dispatchEvent(new Event('change', { bubbles: true }));
-
-    }
- }
-
-  handleChange()
-  select.addEventListener('change', handleChange);
-
-  return () => {    select.removeEventListener('change', handleChange);
-  }
-
-}, [])
+    return () => {
+      select.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (data.length === 0) return;
@@ -300,29 +341,27 @@ useEffect(() => {
     <>
       <div className={`buttonsBlock ${isShow ? 'active' : ''}`}>
         <CloseButton onClose={onClose} />
-        <ButtonsWrapper openModal={openModal} offertInput={offertInput} stateSlug={stateSlug} />
-
-        <Input
-          changeDate={setActivateDate}
-          dateValue={activateDate}
-          textValue='01:00:00'
-          title="Activate time"
+        <ButtonsWrapper
+          openModal={openModal}
+          offertInput={offertInput}
+          stateSlug={stateSlug}
+          useDeactivation={bannerType !== 'category_page'}
         />
 
-        <Input
-          changeDate={setDeactivateDate}
-          dateValue={deactivateDate}
-          textValue='00:59:00'
-          title="Deactivate time"
-        />
+        <Input changeDate={setActivateDate} dateValue={activateDate} textValue="01:00:00" title="Activate time" />
 
-        {bannerType === 'discount_top' && <Input
-          changeDate={setCountDate}
-          dateValue={countDate}
-          textValue='23:59:59'
-          title='Countdown time'
-        />}
-        
+        {bannerType !== 'category_page' && (
+          <Input
+            changeDate={setDeactivateDate}
+            dateValue={deactivateDate}
+            textValue="23:59:00"
+            title="Deactivate time"
+          />
+        )}
+
+        {bannerType === 'discount_top' && (
+          <Input changeDate={setCountDate} dateValue={countDate} textValue="23:59:59" title="Countdown time" />
+        )}
 
         <ColorPicker pickerState={pickerDesktop} titleText={'Desktop color'} />
         <ColorPicker pickerState={pickerMobile} titleText={'Mobile color'} />

@@ -7,7 +7,7 @@ import emptyUpdate from './img/empty_update.gif';
 
 import './styles/style.scss';
 
-export default function ButtonsWrapper({ openModal, offertInput, stateSlug }) {
+export default function ButtonsWrapper({ openModal, offertInput, stateSlug, useDeactivation }) {
     const [loading, setLoading] = useState(null);
 
   const fulfillFunc = () => {
@@ -41,8 +41,8 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug }) {
   };
 
   const areDateFieldsEmpty = () => {
-    const activateDateInput = document.querySelectorAll('input[class="input__actOrDeact"][type="date"]')[0];
-    const deactivateDateInput = document.querySelectorAll('input[class="input__actOrDeact"][type="date"]')[1];
+    const activateDateInput = document.querySelectorAll('input[name="activate_from_date"]#activate_from_date')[0];
+    const deactivateDateInput = document.querySelectorAll('input[name="deactivate_from_date"]#deactivate_from_date')[0];
 
     const activateIsEmpty = !activateDateInput?.value?.trim()
     const deactivateIsEmpty = !deactivateDateInput?.value?.trim()
@@ -57,7 +57,7 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug }) {
   const handleUpdateClick = async () => {
     setLoading('update')
 
-    if(areDateFieldsEmpty()) {
+    if(areDateFieldsEmpty() && useDeactivation) {
     const result = await Swal.fire({
         title: 'Warning',
         html: `
@@ -65,7 +65,7 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug }) {
             One or both date popup fields (<strong>Activate time</strong> and/or <strong>Deactivate time</strong>) are empty.<br><br>
             <strong>If you continue:</strong><br>
             • Activation date will be <strong>today 01:00:00</strong><br>
-            • Deactivation date will be <strong>today 00:59:00</strong><br><br>
+            • Deactivation date will be <strong>today 23:59:00</strong><br><br>
             Continue anyway?
           </div>
           <img src=${emptyUpdate} alt="success" style="width:400px; margin-top: 10px;" />
