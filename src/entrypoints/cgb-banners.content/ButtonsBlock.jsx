@@ -55,6 +55,8 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
 
       const currentActivate = actDate.value?.trim() || '';
       const currentDeactivate = deactDate.value?.trim() || '';
+      
+      console.log('Current activate/deactivate dates:', { currentActivate, currentDeactivate });
 
       setActivateDate(currentActivate);
       setDeactivateDate(currentDeactivate);
@@ -140,7 +142,10 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
       });
       setDeactivateDate('');
     } else {
-      let activationDateStr = actDate?.value?.trim() || '';
+      let activationDateStr = actDate?.placeholder?.trim() || '';
+
+      console.log("activationDate", activationDateStr);
+      
 
       // If activation is empty, use today
       if (!activationDateStr) {
@@ -148,10 +153,13 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
         activationDateStr = today.toISOString().split('T')[0];
       }
 
-      const deactDateStr = activationDateStr; // ← Same date as activation
+      const deactDateStr = new Date().toISOString().split('T')[0]; // ← Same date as activation
 
-      if (!deactDate.value?.trim()) {
+      if (!deactDate.placeholder?.trim()) {
+        console.log("new change", deactDate.value);
+        
         deactDate.value = deactDateStr;
+        deactDate.placeholder = deactDateStr;
         deactDate.dispatchEvent(new Event('input', { bubbles: true }));
         deactDate.dispatchEvent(new Event('change', { bubbles: true }));
         setDeactivateDate(deactDateStr);
