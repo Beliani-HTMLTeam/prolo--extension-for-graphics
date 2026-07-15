@@ -1,4 +1,18 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.6...v1.1.7)
+
+### 🐛 Bug Fixes
+
+- dates ([6c6ec76](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/6c6ec76))
+
+### 🧹 Chores
+
+- release v1.1.7 ([202e3b6](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/202e3b6))
+
+### Contributors
+
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.5...v1.1.6)
 
 ### 🚀 Features

@@ -29,6 +29,8 @@ export const langSlugDesktop = {
   'offer_text[slovak]': 'sk',
   'offer_text[spanish]': 'es',
   'offer_text[swedish]': 'se',
+  'offer_text[croatian]': 'hr',
+  'offer_text[slovene]': 'si',
 
   //! Paste for context function shop ---> HR, SI
 };
@@ -56,6 +58,8 @@ export const COUNTRY_CODE = {
   HU: 'Hungarian',
   RO: 'romanian',
   BEN: '',
+  SI: 'slovene',
+  HR: 'croatian',
 
   //! Paste for Center banner shop ---> HR, SI
 };
@@ -108,6 +112,10 @@ export const COUNTRY_CASHBACK = {
   'BE-EN': 'english',
   'BE-FR': 'french',
   'BE-NL': 'dutch',
+  HR: 'croatian',
+  "HR-EN": 'english',
+  SI: 'slovene',
+  "SI-EN": 'english',
 
   //! Paste for cashback banner shop ---> HR, SI
 };
@@ -270,6 +278,7 @@ export const checkedDeviceType = (item, device, btnArray) => {
       const transferData = new DataTransfer();
       transferData.items.add(item);
       button.files = transferData.files;
+      console.log("button.files", button.name, button.files)
       console.log(`✅ Assigned ${item.name} → ${button.name}`);
     }
   });

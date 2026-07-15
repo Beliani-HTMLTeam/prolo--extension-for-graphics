@@ -787,6 +787,10 @@ export default defineBackground(() => {
           'BE-EN': 'english',
           'BE-FR': 'french',
           'BE-NL': 'dutch',
+          HR: 'croatian',
+          "HR-EN": 'english',
+          SI: 'slovene',
+          "SI-EN": 'english',
         };
 
         // Helper function to get the language from filename using COUNTRY_CASHBACK
