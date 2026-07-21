@@ -1,4 +1,18 @@
 # Changelog
+[Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.7...v1.1.8)
+
+### 🚀 Features
+
+- activation and deactivation dates checking and update button disabling ([a6262f9](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/a6262f9))
+
+### 🧹 Chores
+
+- release v1.1.8 ([7594cd2](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/commit/7594cd2))
+
+### Contributors
+
+- ShadowDrake21 <dimka670020040@gmail.com>
+
 [Compare changes](https://github.com/Beliani-HTMLTeam/prolo--extension-for-graphics/compare/v1.1.6...v1.1.7)
 
 ### 🐛 Bug Fixes
