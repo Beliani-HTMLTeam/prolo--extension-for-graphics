@@ -423,6 +423,15 @@
   transform: rotateX(30deg);
 }
 
+.animated-button:disabled
+{
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  pointer-events: none;
+}
+
 //Choose btn for zip
 .zipInput {
   display: inline-flex;

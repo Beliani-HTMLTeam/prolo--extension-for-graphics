@@ -8,7 +8,73 @@ import emptyUpdate from './img/empty_update.gif';
 import './styles/style.scss';
 
 export default function ButtonsWrapper({ openModal, offertInput, stateSlug, useDeactivation }) {
-    const [loading, setLoading] = useState(null);
+  const [loading, setLoading] = useState(null);
+  const [isUpdateDisabled, setIsUpdateDisabled] = useState(false);
+const checkDates = () => {
+  const actDateInput = document.querySelector('input[name="activate_from_date"]#activate_from_date');
+  const deactDateInput = document.querySelector('input[name="deactivate_from_date"]#deactivate_from_date');
+  const actTimeInput = document.querySelector('input[name="activate_from_time"]#activate_from_time');
+  const deactTimeInput = document.querySelector('input[name="deactivate_from_time"]#deactivate_from_time');
+
+  const actDate = actDateInput?.value?.trim() || actDateInput?.placeholder?.trim() || '';
+  const deactDate = deactDateInput?.value?.trim() || deactDateInput?.placeholder?.trim() || '';
+  const actTime = actTimeInput?.value?.trim() || '';
+  const deactTime = deactTimeInput?.value?.trim() || '';
+
+  console.log('Dynamic check → Act:', actDate, actTime, '| Deact:', deactDate, deactTime);
+
+  let shouldDisable = false;
+
+  if (useDeactivation) {
+    const activateEmpty = !actDate;
+    const deactivateEmpty = !deactDate;
+
+    if (activateEmpty || deactivateEmpty) {
+      shouldDisable = true;
+    } else if (actDate && deactDate) {
+      // Compare dates
+      if (actDate > deactDate) {
+        shouldDisable = true;
+      } 
+      // Same date → check time order
+      else if (actDate === deactDate && actTime && deactTime) {
+        if (actTime >= deactTime) {
+          shouldDisable = true;
+        }
+      }
+    }
+  }
+
+  setIsUpdateDisabled(shouldDisable);
+};
+
+  // Dynamic checking
+  useEffect(() => {
+    checkDates();
+
+    // MutationObserver (for React-controlled changes)
+    const observer = new MutationObserver(checkDates);
+    const config = { attributes: true, childList: true, subtree: true };
+
+    const inputs = document.querySelectorAll('input[name*="from_date"], input[name*="from_time"]');
+    inputs.forEach(input => observer.observe(input, config));
+
+    // Direct event listeners (more responsive for user typing)
+    const handleInputChange = () => checkDates();
+    
+    inputs.forEach(input => {
+      input.addEventListener('input', handleInputChange);
+      input.addEventListener('change', handleInputChange);
+    });
+
+    return () => {
+      observer.disconnect();
+      inputs.forEach(input => {
+        input.removeEventListener('input', handleInputChange);
+        input.removeEventListener('change', handleInputChange);
+      });
+    };
+  }, [useDeactivation]);
 
   const fulfillFunc = () => {
     setLoading('fulfill');
@@ -44,21 +110,20 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug, useD
     const activateDateInput = document.querySelectorAll('input[name="activate_from_date"]#activate_from_date')[0];
     const deactivateDateInput = document.querySelectorAll('input[name="deactivate_from_date"]#deactivate_from_date')[0];
 
-    const activateIsEmpty = !activateDateInput?.value?.trim()
-    const deactivateIsEmpty = !deactivateDateInput?.value?.trim()
+    const activateIsEmpty = !activateDateInput?.value?.trim();
+    const deactivateIsEmpty = !deactivateDateInput?.value?.trim();
 
     console.log('activate date is empty:', activateIsEmpty);
     console.log('deactivate date is empty:', deactivateIsEmpty);
-    
 
     return activateIsEmpty || deactivateIsEmpty;
-  }
+  };
 
   const handleUpdateClick = async () => {
-    setLoading('update')
+    setLoading('update');
 
-    if(areDateFieldsEmpty() && useDeactivation) {
-    const result = await Swal.fire({
+    if (areDateFieldsEmpty() && useDeactivation) {
+      const result = await Swal.fire({
         title: 'Warning',
         html: `
           <div style="text-align: left; font-size: 16px; line-height: 1.15;">
@@ -77,17 +142,16 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug, useD
         cancelButtonText: 'Cancel / go back',
         reverseButtons: true,
         allowOutsideClick: false,
-    })
+      });
 
-
-    if(!result.isConfirmed) {
-      setLoading(null);
-      return;
-    } 
+      if (!result.isConfirmed) {
+        setLoading(null);
+        return;
+      }
     }
 
     realUpdate();
-  }
+  };
 
   const realUpdate = () => {
     setLoading('update');
@@ -119,6 +183,7 @@ export default function ButtonsWrapper({ openModal, offertInput, stateSlug, useD
         className="update"
         loading={loading === 'update'}
         text={'Wait'}
+        disabled={isUpdateDisabled}
       />
     </div>
   );

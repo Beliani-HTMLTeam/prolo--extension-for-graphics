@@ -55,7 +55,7 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
 
       const currentActivate = actDate.value?.trim() || '';
       const currentDeactivate = deactDate.value?.trim() || '';
-      
+
       console.log('Current activate/deactivate dates:', { currentActivate, currentDeactivate });
 
       setActivateDate(currentActivate);
@@ -77,7 +77,7 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
       };
 
       applyIfEmpty(actTime, '01:00:00');
-      applyIfEmpty(deactTime, '23:59:00');
+      applyIfEmpty(deactTime, '00:59:00');
 
       let activationDateStr = currentActivate;
       if (!currentActivate) {
@@ -144,20 +144,25 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
     } else {
       let activationDateStr = actDate?.placeholder?.trim() || '';
 
-      console.log("activationDate", activationDateStr);
-      
+      console.log('activationDate', activationDateStr);
 
       // If activation is empty, use today
       if (!activationDateStr) {
         const today = new Date();
         activationDateStr = today.toISOString().split('T')[0];
+
+        actDate.value = activationDateStr;
+        actDate.placeholder = activationDateStr;
+
+        actDate.dispatchEvent(new Event('input', { bubbles: true }));
+        actDate.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
       const deactDateStr = new Date().toISOString().split('T')[0]; // ← Same date as activation
 
       if (!deactDate.placeholder?.trim()) {
-        console.log("new change", deactDate.value);
-        
+        console.log('new change', deactDate.value);
+
         deactDate.value = deactDateStr;
         deactDate.placeholder = deactDateStr;
         deactDate.dispatchEvent(new Event('input', { bubbles: true }));
@@ -166,7 +171,7 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
       }
 
       if (deactTime && !deactTime.value?.trim()) {
-        deactTime.value = '23:59:00';
+        deactTime.value = '00:59:00';
       }
     }
   }, [bannerType]);
@@ -362,7 +367,7 @@ export default function ButtonsBlock({ isShow, onClose, imgData }) {
           <Input
             changeDate={setDeactivateDate}
             dateValue={deactivateDate}
-            textValue="23:59:00"
+            textValue="00:59:00"
             title="Deactivate time"
           />
         )}
